@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_redux_navigation/redux/DestinationToWidgetConverter.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_redux_navigation/converter/DestinationToWidgetConverter.dart';
 import 'package:flutter_redux_navigation/redux/actions.dart';
 import 'package:redux/redux.dart';
 
@@ -14,6 +15,7 @@ class AppMiddleware {
   List<Middleware<AppState>> getMiddlewares() {
     return [
       TypedMiddleware<AppState, NavigateToNext>(_navigateToNextMiddleware()),
+      TypedMiddleware<AppState, NavigateToNextAndReplace>(_navigateToNextAndReplaceMiddleware()),
       TypedMiddleware<AppState, NavigateBack>(_navigateBackMiddleware())
     ];
   }
@@ -28,10 +30,20 @@ class AppMiddleware {
     };
   }
 
+  Middleware<AppState> _navigateToNextAndReplaceMiddleware() {
+    return (Store<AppState> store, action, NextDispatcher next) {
+      final currentDestination = (action as NavigateToNextAndReplace).destination;
+      navigatorKey.currentState.pushReplacement(MaterialPageRoute(
+          builder: (BuildContext context) => _destinationToWidgetConverter.convert(currentDestination)
+      ));
+      next(action);
+    };
+  }
+
   Middleware<AppState> _navigateBackMiddleware() {
     return (Store<AppState> store, action, NextDispatcher next) {
       final currentActivePages = store.state.activePages;
-      if (currentActivePages.length == 1) return;
+      if (currentActivePages.length == 1) SystemChannels.platform.invokeMethod('SystemNavigator.pop');
       navigatorKey.currentState.pop();
       next(action);
     };

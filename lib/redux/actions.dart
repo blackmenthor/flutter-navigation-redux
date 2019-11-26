@@ -9,4 +9,12 @@ class NavigateToNext {
 
 }
 
+class NavigateToNextAndReplace {
+
+  NavigateToNextAndReplace({@required this.destination});
+
+  final Destination destination;
+
+}
+
 class NavigateBack {}
